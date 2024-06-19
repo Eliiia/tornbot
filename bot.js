@@ -1,10 +1,13 @@
 const fs = require("fs");
 const path = require("path");   
+const mongoose = require("mongoose");
 const { Client, Collection, Events, GatewayIntentBits } = require("discord.js");
 
 const { config } = require("dotenv");
 
 const checks = require("./checks.js");
+const mod = require("./mod.js");
+const log = mod.log;
 
 // Dotenv config
 config();
@@ -15,7 +18,7 @@ client.commands = new Collection()
 
 // Login
 client.once(Events.ClientReady, readyClient => {
-    console.log(`Ready as ${readyClient.user.tag}!`);
+    log(`Ready as ${readyClient.user.tag}!`);
 });
 
 // Command registration
@@ -31,7 +34,7 @@ for (const folder of commandFolders) { // loop through folders
         if ("info" in command && "cmd" in command)
             client.commands.set(command.info.name, command);
         else
-            console.log(`WARNING The command at ${filePath} is missing data`);
+            log(`WARNING The command at ${filePath} is missing data`);
     }
 }
 
@@ -57,7 +60,14 @@ client.on(Events.InteractionCreate, async interaction => {
     }
 })
 
+// Start regular API checks
 checks.start();
+
+// Connect to database
+log(`Connecting to database at ${process.env.DB_URL}`);
+mongoose.connect(process.env.DB_URL).then(() => {
+    log("Connected to database!");
+});
 
 // Login
 client.login(process.env.DISCORD_TOKEN);
